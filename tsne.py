@@ -13,6 +13,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 
 from helper import *
+from rbm import *
 
 def preprocess_img(xs):
 
@@ -74,7 +75,7 @@ class ptSNE:
 
         x_num, x_dim = xs.size()
         
-        batches = map(lambda s: (s, s + batch_size) if s + batch_size <= x_num else x_num,
+        batches = map(lambda s: (s, s + batch_size) if s + batch_size <= x_num else (s, x_num),
             torch.arange(0, x_num, batch_size).int())
         batch_num = len(batches)
 
@@ -126,6 +127,122 @@ class ptSNE:
         
         fig = make_cost_plot(log["cost"])
         fig.savefig("cost.png")
+
+    def pre_train(self, xs, batch_size, epoch_num):
+
+        x_num, _ = xs.size()
+
+        # Create batch idcs
+        batches = map(lambda s: (s, s + batch_size) if s + batch_size <= x_num else (s, x_num),
+            torch.arange(0, x_num, batch_size).int())
+        batch_num = len(batches)
+        log_skip = int(batch_num / 10)
+
+        # Send xs to GPU
+        xs = xs.cuda()
+
+        # First RBM
+        rbm_1 = RBMBer(784, 500)
+
+        alpha = 0.5
+        for epoch in range(epoch_num):
+
+            if epoch > 5:
+                alpha = 0.9
+
+            print("#sweep, #iter, error")
+
+            for i, (batch_s, batch_e) in enumerate(batches, 1):
+
+                this_batch_size = batch_e - batch_s
+
+                x = xs[batch_s:batch_e, :]
+
+                error = rbm_1.cd(x, eta=0.1, alpha=alpha, lam=0.0002).data[0]
+
+                if i % log_skip == 0:
+                    print("%6d, %5d, %.3f" %
+                        (epoch + 1, i, error / this_batch_size))
+
+        h_1 = (rbm_1.p_h_given_v(xs) >= 0.5).float()
+
+        rbm_2 = RBMBer(500, 500)
+
+        alpha = 0.5
+        for epoch in range(epoch_num):
+
+            if epoch > 5:
+                alpha = 0.9
+
+            print("#sweep, #iter, error")
+
+            for i, (batch_s, batch_e) in enumerate(batches, 1):
+
+                this_batch_size = batch_e - batch_s
+
+                x = h_1[batch_s:batch_e, :]
+
+                error = rbm_2.cd(x, eta=0.1, alpha=alpha, lam=0.0002).data[0]
+
+                if i % log_skip == 0:
+                    print("%6d, %5d, %.3f" %
+                        (epoch + 1, i, error / this_batch_size))
+
+        h_2 = (rbm_2.p_h_given_v(h_1) >= 0.5).float()
+
+        rbm_3 = RBMBer(500, 2000)
+
+        alpha = 0.5
+        for epoch in range(epoch_num):
+
+            if epoch > 5:
+                alpha = 0.9
+
+            print("#sweep, #iter, error")
+
+            for i, (batch_s, batch_e) in enumerate(batches, 1):
+
+                this_batch_size = batch_e - batch_s
+
+                x = h_2[batch_s:batch_e, :]
+
+                error = rbm_3.cd(x, eta=0.1, alpha=alpha, lam=0.0002).data[0]
+
+                if i % log_skip == 0:
+                    print("%6d, %5d, %.3f" %
+                        (epoch + 1, i, error / this_batch_size))
+
+        h_3 = (rbm_3.p_h_given_v(h_2) >= 0.5).float()
+
+        rbm_4 = RBMGaussHid(2000, 2)
+
+        alpha = 0.5
+        for epoch in range(epoch_num):
+
+            if epoch > 5:
+                alpha = 0.9
+
+            print("#sweep, #iter, error")
+
+            for i, (batch_s, batch_e) in enumerate(batches, 1):
+
+                this_batch_size = batch_e - batch_s
+
+                x = h_3[batch_s:batch_e, :]
+
+                error = rbm_4.cd(x, eta=0.001, alpha=alpha, lam=0.0002).data[0]
+
+                if i % log_skip == 0:
+                    print("%6d, %5d, %.3f" %
+                        (epoch + 1, i, error / this_batch_size))
+
+        state_dict = self.encoder.state_dict()
+
+        state_dict["1.weight"] = rbm_1.w
+        state_dict["2.weight"] = rbm_2.w
+        state_dict["3.weight"] = rbm_3.w
+        state_dict["4.weight"] = rbm_4.w
+
 
     def apply(self, xs):
         

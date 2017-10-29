@@ -53,7 +53,8 @@ encoder = nn.Sequential(
 
 ptsne = ptSNE(encoder)
 
-ptsne.train(xs, 200, 300, 1e-3, 20)
+ptsne.pre_train(xs, 300, 50)
+ptsne.train(xs, 300, 30, 2e-2, 20)
 
 xs_2d = ptsne.apply(xs)
 
