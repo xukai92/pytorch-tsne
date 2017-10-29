@@ -9,13 +9,13 @@ from tsne import *
 import torch
 import torch.nn as nn
 
-
 print("[tsne.test] testing starts!")
 
 print("[tsne.test] testing preprocess_img...")
 
-imgs, _ = torch.load("test.pt") # 200 images from MNIST
+imgs, labels = torch.load("test.pt") # 200 images from MNIST
 xs = preprocess_img(imgs)
+xs = xs[:10000,:]
 
 print("[tsne.test] done")
 
@@ -53,7 +53,12 @@ encoder = nn.Sequential(
 
 ptsne = ptSNE(encoder)
 
-ptsne.train(xs, 100, 10, 5e8)
+ptsne.train(xs, 200, 300, 1e-3, 20)
+
+xs_2d = ptsne.apply(xs)
+
+fig = make_2d_plot(xs_2d, labels)
+fig.savefig("vis_scatter.png")
 
 print("[tsne.test] testing pairwise...")
 
