@@ -10,7 +10,7 @@ from __future__ import print_function
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
-
+import torch.nn as nn
 
 def preprocess_img(xs):
 
@@ -21,23 +21,23 @@ def preprocess_img(xs):
 
     return xs
 
-def pairwise(xs, ppl=1):
+def pairwise(xs):
 
     x_num, x_dim = xs.size()
     x1 = xs.unsqueeze(0).expand(x_num, x_num, x_dim)
     x2 = xs.unsqueeze(1).expand(x_num, x_num, x_dim)
-    pws = ((x1 - x2) ** 2.0 / (2 * ppl)).sum(2)
+    pws = ((x1 - x2) ** 2.0).sum(2)
 
     return pws
 
-def pairwise2gauss(pws):
+def pairwise2gauss(pws, ppl=1):
 
     x_num, _ = pws.size()
-    pws_tmp = torch.exp(-pws)
+    pws_tmp = torch.exp(-pws / (2 * ppl))
 
     pjgi = pws_tmp / pws_tmp.sum(0).view(x_num, 1).repeat(1, x_num)
     pigj = pws_tmp / pws_tmp.sum(1).view(1, x_num).repeat(x_num, 1)
-    
+
     pij = (pjgi + pigj) / (2 * x_num)
 
     return pij
@@ -61,9 +61,9 @@ class ptSNE:
         x_num, x_dim = xs.size()
 
         batches = map(lambda s: (s, s + batch_size - 1) if s + batch_size - 1 < x_num else x_num,
-        torch.arange(0, x_num, batch_size).int())
+            torch.arange(0, x_num, batch_size).int())
         batch_num = len(batches)
-        log_skip = int(batch_num / 4)
+        log_skip = int(batch_num / 4) + 1
 
         Ps_l = []
 
@@ -73,12 +73,10 @@ class ptSNE:
             Ps_l.append(pairwise2gauss(xs_pairwise))
 
         optimizer = optim.SGD(self.encoder.parameters(), lr=lr)
-        criterion = torch.nn.KLDivLoss(size_average=True)
+        criterion = torch.nn.KLDivLoss(size_average=False)
 
         log = dict()
         log["cost"] = []
-
-        # self.encoder.init.normal()
 
         for epoch in range(1, epoch_num + 1):
 
@@ -98,18 +96,19 @@ class ptSNE:
 
                 Q = pairwise2t(y_pairwise)
 
-                loss = criterion(Q, P)
-
-                running_cost += loss.data[0]
-                log["cost"].append(running_cost / i)
+                loss = criterion(torch.log(Q), P)
 
                 loss.backward()
 
                 optimizer.step()
 
+                running_cost += loss.data[0]
+
                 if i % log_skip == 0:
                     print("%6d, %5d, %.7f" %
                           (epoch, i, running_cost / i))
+            
+            log["cost"].append(running_cost / i)
 
     def __call__(self, *args):
 

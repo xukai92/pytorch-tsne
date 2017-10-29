@@ -23,13 +23,14 @@ print("[tsne.test] testing pairwise...")
 
 t = torch.Tensor([[-1.0, 0.0], [1.0, 0.0], [2.0, 0.0]])
 t_pairwise = pairwise(t)
-assert (t_pairwise == torch.Tensor([[0.0, 2.0, 4.5], [2.0, 0.0, 0.5], [4.5, 0.5, 0.0]])).sum() == 9
+assert (t_pairwise == torch.Tensor([[0.0, 4.0, 9.0], [4.0, 0.0, 1.0], [9.0, 1.0, 0.0]])).sum() == 9
 
 print("[tsne.test] done")
 
 print("[tsne.test] testing pairwise2gauss...")
 
 Ps = pairwise2gauss(t_pairwise)
+assert (Ps - torch.Tensor([[0.291, 0.033, 0.003], [0.033, 0.191, 0.121], [0.003, 0.121, 0.206]])).sum() < 1e-3
 
 print("[tsne.test] done")
 
@@ -52,7 +53,7 @@ encoder = nn.Sequential(
 
 ptsne = ptSNE(encoder)
 
-ptsne.train(xs, 40, 10, 0.1)
+ptsne.train(xs, 100, 10, 5e8)
 
 print("[tsne.test] testing pairwise...")
 
