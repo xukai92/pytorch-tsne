@@ -34,13 +34,25 @@ def pairwise(xs):
 
     return pws
 
-def pairwise2gauss(pws, ppl=1):
+def entropy(ps):
+
+    return -(ps * torch.log(ps) * 1.4426950408889634).sum()
+
+def perplexity(ps):
+
+    return 2 ** entropy(ps)
+
+def pairwise2gauss(pws, ppl, tol=1e-3):
 
     x_num, _ = pws.size()
-    pws_tmp = torch.exp(-pws / (2 * ppl))
+    mask_without_diag = (1 - torch.diag(torch.zeros(x_num))).cuda()
+    sigs = torch.ones(x_num).cuda()
+
+    pws_tmp = torch.exp(-pws / (2 * sigs**2).repeat(x_num, 1)) * mask_without_diag
 
     pjgi = pws_tmp / pws_tmp.sum(0).view(x_num, 1).repeat(1, x_num)
-    pigj = pws_tmp / pws_tmp.sum(1).view(1, x_num).repeat(x_num, 1)
+    # pigj = pws_tmp / pws_tmp.sum(1).view(1, x_num).repeat(x_num, 1)
+    pigj = pjgi.t()
 
     pij = (pjgi + pigj) / (2 * x_num)
 

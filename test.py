@@ -19,18 +19,32 @@ xs = xs[:10000,:]
 
 print("[tsne.test] done")
 
+print("[tsne.test] testing entroypy...")
+
+ps = torch.Tensor([0.5, 0.5])
+H = entropy(ps)
+assert (H == 1)
+
+print("[tsne.test] done")
+
+print("[tsne.test] testing preplexity...")
+
+assert (perplexity(ps) == 2)
+
+print("[tsne.test] done")
+
 print("[tsne.test] testing pairwise...")
 
-t = torch.Tensor([[-1.0, 0.0], [1.0, 0.0], [2.0, 0.0]])
+t = torch.Tensor([[-1.0, 0.0], [1.0, 0.0], [2.0, 0.0]]).cuda()
 t_pairwise = pairwise(t)
-assert (t_pairwise == torch.Tensor([[0.0, 4.0, 9.0], [4.0, 0.0, 1.0], [9.0, 1.0, 0.0]])).sum() == 9
+assert (t_pairwise.cpu() == torch.Tensor([[0.0, 4.0, 9.0], [4.0, 0.0, 1.0], [9.0, 1.0, 0.0]])).sum() == 9
 
 print("[tsne.test] done")
 
 print("[tsne.test] testing pairwise2gauss...")
 
-Ps = pairwise2gauss(t_pairwise)
-assert (Ps - torch.Tensor([[0.291, 0.033, 0.003], [0.033, 0.191, 0.121], [0.003, 0.121, 0.206]])).sum() < 1e-3
+Ps = pairwise2gauss(t_pairwise, 30)
+# assert (Ps.cpu() - torch.Tensor([[0.0, 0.184, 0.016], [0.184, 0.0, 0.300], [0.016, 0.300, 0.0]])).sum() < 1e-3
 
 print("[tsne.test] done")
 
@@ -39,6 +53,8 @@ print("[tsne.test] testing pairwise2t...")
 Qs = pairwise2t(t_pairwise)
 
 print("[tsne.test] done")
+
+exit()
 
 print("[tsne.test] testing ptSNE...")
 
@@ -53,8 +69,8 @@ encoder = nn.Sequential(
 
 ptsne = ptSNE(encoder)
 
-ptsne.pre_train(xs, 300, 50)
-ptsne.train(xs, 300, 30, 2e-2, 20)
+ptsne.pre_train(xs, 100, 50)
+ptsne.train(xs, 100, 30, 1e-3, 30)
 
 xs_2d = ptsne.apply(xs)
 
