@@ -15,7 +15,7 @@ print("[tsne.test] testing preprocess_img...")
 
 imgs, labels = torch.load("test.pt") # 200 images from MNIST
 xs = preprocess_img(imgs)
-xs = xs[:10000,:]
+# xs = xs[:10000,:]
 
 print("[tsne.test] done")
 
@@ -41,12 +41,12 @@ assert (t_pairwise.cpu() == torch.Tensor([[0.0, 4.0, 9.0], [4.0, 0.0, 1.0], [9.0
 
 print("[tsne.test] done")
 
-print("[tsne.test] testing pairwise2gauss...")
-
-Ps = pairwise2gauss(t_pairwise, 30)
+# print("[tsne.test] testing pairwise2gauss...")
+# 
+# Ps = pairwise2gauss(t_pairwise, 30)
 # assert (Ps.cpu() - torch.Tensor([[0.0, 0.184, 0.016], [0.184, 0.0, 0.300], [0.016, 0.300, 0.0]])).sum() < 1e-3
-
-print("[tsne.test] done")
+# 
+# print("[tsne.test] done")
 
 # print("[tsne.test] testing pairwise2t...")
 # 
@@ -67,8 +67,10 @@ encoder = nn.Sequential(
 
 ptsne = ptSNE(encoder)
 
-ptsne.pre_train(xs, 600, 50)
-ptsne.train(xs, 600, 200, 1e-2, 40)
+ptsne.pre_train(xs, 5000, 50)
+ptsne.train(xs, 5000, 200, 2e-2, 30)
+
+torch.save(ptsne.encoder, "encoder.model")
 
 xs_2d = ptsne.apply(xs)
 

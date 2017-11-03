@@ -46,7 +46,7 @@ def make_2d_plot(xs_2d, labels):
     plt.xlabel("dim 1")
     plt.ylabel("dim 2")
     plt.title("Low dimensional representation of MNIST data")
-
+    
     ax.set_xlim(dim_1_min, dim_1_max)
     ax.set_ylim(dim_2_min, dim_2_max)
 
