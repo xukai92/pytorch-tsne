@@ -20,11 +20,8 @@ class RBMBase:
         self.vis_num = vis_num
         self.hid_num = hid_num
 
-        # Dictionary for storing parameters
-        self.params = dict()
-
         self.w = torch.randn(vis_num, hid_num) * 0.1    # weight matrix
-        self.a = torch.zeros(vis_num) / vis_num         # bias for visiable units
+        self.a = torch.zeros(vis_num)                   # bias for visiable units
         self.b = torch.zeros(hid_num)                   # bias for hidden units
 
         # Corresponding momentums; _v means velocity of

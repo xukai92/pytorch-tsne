@@ -48,13 +48,11 @@ Ps = pairwise2gauss(t_pairwise, 30)
 
 print("[tsne.test] done")
 
-print("[tsne.test] testing pairwise2t...")
-
-Qs = pairwise2t(t_pairwise)
-
-print("[tsne.test] done")
-
-exit()
+# print("[tsne.test] testing pairwise2t...")
+# 
+# Qs = pairwise2t(t_pairwise)
+# 
+# print("[tsne.test] done")
 
 print("[tsne.test] testing ptSNE...")
 
@@ -69,8 +67,8 @@ encoder = nn.Sequential(
 
 ptsne = ptSNE(encoder)
 
-ptsne.pre_train(xs, 100, 50)
-ptsne.train(xs, 100, 30, 1e-3, 30)
+ptsne.pre_train(xs, 600, 50)
+ptsne.train(xs, 600, 200, 1e-2, 40)
 
 xs_2d = ptsne.apply(xs)
 
