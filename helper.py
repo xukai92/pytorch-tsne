@@ -41,7 +41,7 @@ def make_2d_plot(xs_2d, labels):
 
     fig, ax = plt.subplots(figsize=(16, 9))
 
-    plt.scatter(xs_2d[:, 0], xs_2d[:, 1],
+    plt.scatter(xs_2d[:, 0], xs_2d[:, 1], alpha=0.7,
                 color=map(lambda i: colors[i], labels.numpy()))
     plt.xlabel("dim 1")
     plt.ylabel("dim 2")

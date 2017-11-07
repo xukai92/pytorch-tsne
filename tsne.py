@@ -15,7 +15,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 
 from helper import *
-from rbm import *
+execfile("./pytorch-rbm/rbm.py")
 
 def preprocess_img(xs):
     """

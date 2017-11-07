@@ -1,0 +1,3 @@
+[submodule "pytorch-rbm"]
+	path = pytorch-rbm
+	url = https://github.com/xukai92/pytorch-rbm
